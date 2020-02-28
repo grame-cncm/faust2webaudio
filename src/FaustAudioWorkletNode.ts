@@ -1,6 +1,7 @@
 /* eslint-disable object-curly-newline */
 /* eslint-disable object-property-newline */
 import { TDspMeta, TCompiledDsp, TFaustUI, TFaustUIGroup, TFaustUIItem } from "./types";
+import { remap } from "./utils";
 
 export class FaustAudioWorkletNode extends (window.AudioWorkletNode ? AudioWorkletNode : null) {
     onprocessorerror = (e: ErrorEvent) => {
@@ -45,6 +46,9 @@ export class FaustAudioWorkletNode extends (window.AudioWorkletNode ? AudioWorkl
     inputsItems: string[];
     outputsItems: string[];
 
+    fPitchwheelLabel: { path: string; min: number; max: number }[];
+    fCtrlLabel: { path: string; min: number; max: number }[][];
+
     plotHandler: (plotted: Float32Array[], index: number, events?: { type: string; data: any }[]) => any;
 
     constructor(options: { audioCtx: AudioContext; id: string; compiledDsp: TCompiledDsp; voices?: number; plotHandler?: (plotted: Float32Array[], index: number, events?: { type: string; data: any }[]) => any; mixer32Module: WebAssembly.Module }) {
@@ -71,6 +75,8 @@ export class FaustAudioWorkletNode extends (window.AudioWorkletNode ? AudioWorkl
         this.outputHandler = null;
         this.inputsItems = [];
         this.outputsItems = [];
+        this.fPitchwheelLabel = [];
+        this.fCtrlLabel = new Array(128).fill(null).map(() => []);
         this.plotHandler = options.plotHandler;
         this.parseUI(this.dspMeta.ui);
         if (this.effectMeta) this.parseUI(this.effectMeta.ui);
@@ -96,6 +102,19 @@ export class FaustAudioWorkletNode extends (window.AudioWorkletNode ? AudioWorkl
         } else if (item.type === "vslider" || item.type === "hslider" || item.type === "button" || item.type === "checkbox" || item.type === "nentry") {
             // Keep inputs adresses
             this.inputsItems.push(item.address);
+            if (!item.meta) return;
+            item.meta.forEach((meta) => {
+                const { midi } = meta;
+                if (!midi) return;
+                const strMidi = midi.trim();
+                if (strMidi === "pitchwheel") {
+                    this.fPitchwheelLabel.push({ path: item.address, min: item.min, max: item.max });
+                } else {
+                    const matched = strMidi.match(/^ctrl\s(\d+)/);
+                    if (!matched) return;
+                    this.fCtrlLabel[parseInt(matched[1])].push({ path: item.address, min: item.min, max: item.max });
+                }
+            });
         }
     }
 
@@ -132,19 +151,40 @@ export class FaustAudioWorkletNode extends (window.AudioWorkletNode ? AudioWorkl
         const e = { type: "ctrlChange", data: [0, 123, 0] };
         this.port.postMessage(e);
     }
-    ctrlChange(channel: number, ctrl: number, value: any) {
-        const e = { type: "ctrlChange", data: [channel, ctrl, value] };
+    ctrlChange(channel: number, ctrlIn: number, valueIn: any) {
+        const e = { type: "ctrlChange", data: [channel, ctrlIn, valueIn] };
         this.port.postMessage(e);
+        if (!this.fCtrlLabel[ctrlIn].length) return;
+        this.fCtrlLabel[ctrlIn].forEach((ctrl) => {
+            const { path } = ctrl;
+            const value = remap(valueIn, 0, 127, ctrl.min, ctrl.max);
+            const param = this.parameters.get(path);
+            if (param) param.setValueAtTime(value, this.context.currentTime);
+        });
     }
     pitchWheel(channel: number, wheel: number) {
         const e = { type: "pitchWheel", data: [channel, wheel] };
         this.port.postMessage(e);
+        this.fPitchwheelLabel.forEach((pw) => {
+            const { path } = pw;
+            const value = remap(wheel, 0, 16383, pw.min, pw.max);
+            const param = this.parameters.get(path);
+            if (param) param.setValueAtTime(value, this.context.currentTime);
+        });
     }
     midiMessage(data: number[] | Uint8Array) {
-        const e = { data, type: "midi" };
-        this.port.postMessage(e);
+        const cmd = data[0] >> 4;
+        const channel = data[0] & 0xf;
+        const data1 = data[1];
+        const data2 = data[2];
+        if (channel === 9) return;
+        if (cmd === 8 || (cmd === 9 && data2 === 0)) this.keyOff(channel, data1, data2);
+        else if (cmd === 9) this.keyOn(channel, data1, data2);
+        else if (cmd === 11) this.ctrlChange(channel, data1, data2);
+        else if (cmd === 14) this.pitchWheel(channel, data2 * 128.0 + data1);
+        else this.port.postMessage({ data, type: "midi" });
     }
-    metadata() {} // eslint-disable-line class-methods-use-this
+    metadata() {}
     setParamValue(path: string, value: number) {
         const e = { type: "param", data: { path, value } };
         this.port.postMessage(e);

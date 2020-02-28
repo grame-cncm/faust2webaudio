@@ -86,11 +86,11 @@ export const FaustAudioWorkletProcessorWrapper = () => {
             } else if (item.type === "hbargraph" || item.type === "vbargraph") {
                 // Keep bargraph adresses
                 obj.outputsItems.push(item.address);
-                obj.pathTable$[item.address] = item.index; // eslint-disable-line no-param-reassign
+                obj.pathTable$[item.address] = item.index;
             } else if (item.type === "vslider" || item.type === "hslider" || item.type === "button" || item.type === "checkbox" || item.type === "nentry") {
                 // Keep inputs adresses
                 obj.inputsItems.push(item.address);
-                obj.pathTable$[item.address] = item.index; // eslint-disable-line no-param-reassign
+                obj.pathTable$[item.address] = item.index;
                 if (!item.meta) return;
                 item.meta.forEach((meta) => {
                     const { midi } = meta;
@@ -469,7 +469,7 @@ export const FaustAudioWorkletProcessorWrapper = () => {
             this.fGainLabel$.forEach($ => this.factory.setParamValue(this.dspVoices$[voice], $, velocity / 127));
             this.dspVoicesState[voice] = pitch;
         }
-        keyOff(channel: number, pitch: number, velocity: number) { // eslint-disable-line @typescript-eslint/no-unused-vars
+        keyOff(channel: number, pitch: number, velocity: number) {
             if (!this.voices) return;
             const voice = this.getPlayingVoice(pitch);
             if (voice === this.kNoVoice) return; // console.log("Playing voice not found...");
@@ -490,12 +490,11 @@ export const FaustAudioWorkletProcessorWrapper = () => {
             const channel = data[0] & 0xf;
             const data1 = data[1];
             const data2 = data[2];
-            if (channel === 9) return undefined;
-            if (cmd === 8 || (cmd === 9 && data2 === 0)) return this.keyOff(channel, data1, data2);
-            if (cmd === 9) return this.keyOn(channel, data1, data2);
-            if (cmd === 11) return this.ctrlChange(channel, data1, data2);
-            if (cmd === 14) return this.pitchWheel(channel, (data2 * 128.0 + data1));
-            return undefined;
+            if (channel === 9) return;
+            if (cmd === 8 || (cmd === 9 && data2 === 0)) this.keyOff(channel, data1, data2);
+            else if (cmd === 9) this.keyOn(channel, data1, data2);
+            else if (cmd === 11) this.ctrlChange(channel, data1, data2);
+            else if (cmd === 14) this.pitchWheel(channel, data2 * 128.0 + data1);
         }
         ctrlChange(channel: number, ctrl: number, value: number) {
             if (!this.fCtrlLabel[ctrl].length) return;
