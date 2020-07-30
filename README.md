@@ -9,7 +9,7 @@ Supported Platforms: Chrome >= 49, Firefox >= 45, Edge >= 13, Safari >= 10, iOS 
 Clone a copy of the repo:
 
 ```bash
-git clone https://github.com/Fr0stbyteR/faust2webaudio.git
+git clone https://github.com/grame-cncm/faust2webaudio
 ```
 Put the directory in a local server, then open following pages:
 
@@ -24,7 +24,7 @@ For Poly AudioWorklet: `./test/wpoly.html`
 ## Installing as npm package
 
 ```bash
-npm install -D Fr0stbyteR/faust2webaudio
+npm install -D grame-cncm/faust2webaudio
 ```
 
 Example: 
@@ -58,7 +58,7 @@ Firstly ensure that you have [Git](https://git-scm.com/downloads) and [Node.js](
 Clone a copy of the repo then change to the directory:
 
 ```bash
-git clone https://github.com/Fr0stbyteR/faust2webaudio.git
+git clone https://github.com/grame-cncm/faust2webaudio
 cd faust2webaudio
 ```
 Install dev dependencies:
