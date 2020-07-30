@@ -3,15 +3,16 @@
     <head>
         <meta charset="UTF-8">
         <script src="../dist/index.min.js"></script>
+        <script src="../dist/libfaust-wasm.js"></script>
     </head>
     <body style="position: absolute; width: 100%; height: 100%; margin: 0px">
     </body>
     <script>
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const faust = new Faust2WebAudio.Faust({ debug: true, wasmLocation: "../dist/libfaust-wasm.wasm", dataLocation: "../dist/libfaust-wasm.data" });
-        window.faust = faust;
-        faust.ready
-        .then(() => {
+        FaustModule().then ( module => { 
+            let libf = new module.libFaustWasm();
+            const faust = new Faust2WebAudio.Faust(true, libf);
+            window.faust = faust;
             code = `
 import("stdfaust.lib");
 process = ba.pulsen(1, 10000) : pm.djembe(60, 0.3, 0.4, 1) <: dm.freeverb_demo;`;
