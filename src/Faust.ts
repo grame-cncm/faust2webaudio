@@ -11,6 +11,8 @@ import { TCompiledDsp, TFaustCompileOptions, FaustScriptProcessorNode, TFaustCom
 
 // import * as Binaryen from "binaryen";
 
+///<reference path="libfaust.d.ts"/>
+
 /**
  * Main Faust class,
  * usage: `new Faust().ready.then(faust => any);`
@@ -27,19 +29,19 @@ export class Faust {
      * @memberof Faust
      */
     private libFaust: LibFaust;
-    private createWasmCDSPFactoryFromString: ($name: number, $code: number, argc: number, $argv: number, $errorMsg: number, internalMemory: boolean) => number;
-    private deleteAllWasmCDSPFactories: () => void;
-    private expandCDSPFromString: ($name: number, $code: number, argc: number, $argv: number, $shaKey: number, $errorMsg: number) => number;
-    private getCLibFaustVersion: () => number;
-    private getWasmCModule: ($moduleCode: number) => number;
-    private getWasmCModuleSize: ($moduleCode: number) => number;
-    private getWasmCHelpers: ($moduleCode: number) => number;
-    private freeWasmCModule: ($moduleCode: number) => void;
-    private freeCMemory: ($: number) => number;
-    private cleanupAfterException: () => void;
-    private getErrorAfterException: () => number;
-    private getLibFaustVersion: () => string;
-    private generateCAuxFilesFromString: ($name: number, $code: number, argc: number, $argv: number, $errorMsg: number) => number;
+    // private createWasmCDSPFactoryFromString: ($name: number, $code: number, argc: number, $argv: number, $errorMsg: number, internalMemory: boolean) => number;
+    // private deleteAllWasmCDSPFactories: () => void;
+    // private expandCDSPFromString: ($name: number, $code: number, argc: number, $argv: number, $shaKey: number, $errorMsg: number) => number;
+    // private getCLibFaustVersion: () => number;
+    // private getWasmCModule: ($moduleCode: number) => number;
+    // private getWasmCModuleSize: ($moduleCode: number) => number;
+    // private getWasmCHelpers: ($moduleCode: number) => number;
+    // private freeWasmCModule: ($moduleCode: number) => void;
+    // private freeCMemory: ($: number) => number;
+    // private cleanupAfterException: () => void;
+    // private getErrorAfterException: () => number;
+    // private getLibFaustVersion: () => string;
+    // private generateCAuxFilesFromString: ($name: number, $code: number, argc: number, $argv: number, $errorMsg: number) => number;
     /**
      * Debug mode, set to true to print out each message
      *
@@ -96,10 +98,9 @@ export class Faust {
      * @param {{ debug?: boolean; wasmLocation?: string; dataLocation?: string }} [options]
      * @memberof Faust
      */
-    constructor(options?: { debug?: boolean; wasmLocation?: string; dataLocation?: string }) {
-        this.debug = !!(options && options.debug);
-        this.wasmLocation = options.wasmLocation || "http://fr0stbyter.github.io/faust2webaudio/dist/libfaust-wasm.wasm";
-        this.dataLocation = options.dataLocation || "http://fr0stbyter.github.io/faust2webaudio/dist/libfaust-wasm.data";
+    constructor(debug: boolean, lib: LibFaust) {
+        this.debug = debug;
+        this.libFaust = lib;
     }
     /**
      * Load a libfaust module
@@ -107,14 +108,14 @@ export class Faust {
      * @returns {Promise<Faust>}
      * @memberof Faust
      */
-    async loadLibFaust(): Promise<Faust> {
-        if (this.libFaust) return this;
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
-        this.libFaust = await LibFaustLoader.load(this.wasmLocation, this.dataLocation);
-        this.importLibFaustFunctions();
-        return this;
-    }
+    // async loadLibFaust(): Promise<Faust> {
+    //     if (this.libFaust) return this;
+    //     // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    //     // @ts-ignore
+    //     this.libFaust = await LibFaustLoader.load(this.wasmLocation, this.dataLocation);
+    //     // this.importLibFaustFunctions();
+    //     return this;
+    // }
     /**
      * A promise to resolve when libfaust is ready.
      *
@@ -122,26 +123,28 @@ export class Faust {
      * @type {Promise<Faust>}
      * @memberof Faust
      */
-    get ready(): Promise<Faust> {
-        return this.loadLibFaust();
-    }
-    private importLibFaustFunctions(): void {
-        if (!this.libFaust) return;
-        // Low-level API
-        this.createWasmCDSPFactoryFromString = this.libFaust.cwrap("createWasmCDSPFactoryFromString", "number", ["number", "number", "number", "number", "number", "number"]);
-        this.deleteAllWasmCDSPFactories = this.libFaust.cwrap("deleteAllWasmCDSPFactories", null, []);
-        this.expandCDSPFromString = this.libFaust.cwrap("expandCDSPFromString", "number", ["number", "number", "number", "number", "number", "number"]);
-        this.getCLibFaustVersion = this.libFaust.cwrap("getCLibFaustVersion", "number", []);
-        this.getWasmCModule = this.libFaust.cwrap("getWasmCModule", "number", ["number"]);
-        this.getWasmCModuleSize = this.libFaust.cwrap("getWasmCModuleSize", "number", ["number"]);
-        this.getWasmCHelpers = this.libFaust.cwrap("getWasmCHelpers", "number", ["number"]);
-        this.freeWasmCModule = this.libFaust.cwrap("freeWasmCModule", null, ["number"]);
-        this.freeCMemory = this.libFaust.cwrap("freeCMemory", null, ["number"]);
-        this.cleanupAfterException = this.libFaust.cwrap("cleanupAfterException", null, []);
-        this.getErrorAfterException = this.libFaust.cwrap("getErrorAfterException", "number", []);
-        this.getLibFaustVersion = () => this.libFaust.UTF8ToString(this.getCLibFaustVersion());
-        this.generateCAuxFilesFromString = this.libFaust.cwrap("generateCAuxFilesFromString", "number", ["number", "number", "number", "number", "number"]);
-    }
+    // get ready(): Promise<Faust> {
+    //     return this.loadLibFaust();
+    // }
+    // private importLibFaustFunctions(): void {
+    //     if (!this.libFaust) return;
+        // this.cleanupAfterException = this.libFaust.cwrap("cleanupAfterException", null, []);
+        // this.getErrorAfterException = this.libFaust.cwrap("getErrorAfterException", "number", []);
+
+        // this.createWasmCDSPFactoryFromString = this.libFaust.cwrap("createWasmCDSPFactoryFromString", "number", ["number", "number", "number", "number", "number", "number"]);
+        // this.deleteAllWasmCDSPFactories = this.libFaust.cwrap("deleteAllWasmCDSPFactories", null, []);
+        // this.expandCDSPFromString = this.libFaust.cwrap("expandCDSPFromString", "number", ["number", "number", "number", "number", "number", "number"]);
+        // this.getCLibFaustVersion = this.libFaust.cwrap("getCLibFaustVersion", "number", []);
+        // this.getWasmCModule = this.libFaust.cwrap("getWasmCModule", "number", ["number"]);
+        // this.getWasmCModuleSize = this.libFaust.cwrap("getWasmCModuleSize", "number", ["number"]);
+        // this.getWasmCHelpers = this.libFaust.cwrap("getWasmCHelpers", "number", ["number"]);
+        // this.freeWasmCModule = this.libFaust.cwrap("freeWasmCModule", null, ["number"]);
+        // this.freeCMemory = this.libFaust.cwrap("freeCMemory", null, ["number"]);
+        // this.cleanupAfterException = this.libFaust.cwrap("cleanupAfterException", null, []);
+        // this.getErrorAfterException = this.libFaust.cwrap("getErrorAfterException", "number", []);
+        // this.getLibFaustVersion = () => this.libFaust.UTF8ToString(this.getCLibFaustVersion());
+        // this.generateCAuxFilesFromString = this.libFaust.cwrap("generateCAuxFilesFromString", "number", ["number", "number", "number", "number", "number"]);
+    // }
     /**
      * Create a AudioNode from dsp source code with options.
      *
@@ -199,67 +202,91 @@ export class Faust {
      * @memberof Faust
      */
     private compileCode(factoryName: string, code: string, argvIn: string[], internalMemory: boolean): TCompiledCode {
-        const codeSize = this.libFaust.lengthBytesUTF8(code) + 1;
-        const $code = this.libFaust._malloc(codeSize);
-        const name = "FaustDSP";
-        const nameSize = this.libFaust.lengthBytesUTF8(name) + 1;
-        const $name = this.libFaust._malloc(nameSize);
-        const $errorMsg = this.libFaust._malloc(4096);
+        // const codeSize = this.libFaust.lengthBytesUTF8(code) + 1;
+        // const $code = this.libFaust._malloc(codeSize);
+        // const name = "FaustDSP";
+        // const nameSize = this.libFaust.lengthBytesUTF8(name) + 1;
+        // const $name = this.libFaust._malloc(nameSize);
+        // const $errorMsg = this.libFaust._malloc(4096);
 
-        this.libFaust.stringToUTF8(name, $name, nameSize);
-        this.libFaust.stringToUTF8(code, $code, codeSize);
+        // this.libFaust.stringToUTF8(name, $name, nameSize);
+        // this.libFaust.stringToUTF8(code, $code, codeSize);
 
         // Add 'cn' option with the factory name
-        const argv = argvIn || [];
-        argv.push("-cn", factoryName);
+        // const argv = argvIn || [];
+        // argv.push("-cn", factoryName);
 
-        // Prepare 'argv_aux' array for C side
-        const ptrSize = 4;
-        const $argv = this.libFaust._malloc(argv.length * ptrSize); // Get buffer from emscripten.
-        let argvBuffer$ = new Int32Array(this.libFaust.HEAP32.buffer, $argv, argv.length); // Get a integer view on the newly allocated buffer.
-        for (let i = 0; i < argv.length; i++) {
-            const size$arg = this.libFaust.lengthBytesUTF8(argv[i]) + 1;
-            const $arg = this.libFaust._malloc(size$arg);
-            this.libFaust.stringToUTF8(argv[i], $arg, size$arg);
-            argvBuffer$[i] = $arg;
-        }
+        // // Prepare 'argv_aux' array for C side
+        // const ptrSize = 4;
+        // const $argv = this.libFaust._malloc(argv.length * ptrSize); // Get buffer from emscripten.
+        // let argvBuffer$ = new Int32Array(this.libFaust.HEAP32.buffer, $argv, argv.length); // Get a integer view on the newly allocated buffer.
+        // for (let i = 0; i < argv.length; i++) {
+        //     const size$arg = this.libFaust.lengthBytesUTF8(argv[i]) + 1;
+        //     const $arg = this.libFaust._malloc(size$arg);
+        //     this.libFaust.stringToUTF8(argv[i], $arg, size$arg);
+        //     argvBuffer$[i] = $arg;
+        // }
+        let argsStr = utils.argsTbl2String(argvIn) + " -cn " + factoryName;
         try {
             const time1 = performance.now();
-            const $moduleCode = this.createWasmCDSPFactoryFromString($name, $code, argv.length, $argv, $errorMsg, internalMemory);
+            let fact = this.libFaust.createDSPFactory("FaustDSP", code, argsStr, internalMemory);
             const time2 = performance.now();
             this.log("Faust compilation duration : " + (time2 - time1));
-            const errorMsg = this.libFaust.UTF8ToString($errorMsg);
-            if (errorMsg) throw new Error(errorMsg);
+            if (fact.error) throw new Error(fact.error);
 
-            if ($moduleCode === 0) return null;
-            const $compiledCode = this.getWasmCModule($moduleCode);
-            const compiledCodeSize = this.getWasmCModuleSize($moduleCode);
+            if (fact.module === 0) return null;
+
+            let wasm = this.libFaust.getWasmModule(fact.module);
+            this.log("getWasmModule "  + wasm.module);
             // Copy native 'binary' string in JavaScript Uint8Array
-            const ui8Code = new Uint8Array(compiledCodeSize);
-            for (let i = 0; i < compiledCodeSize; i++) {
-                // faster than 'getValue' which gets the type of access for each read...
-                ui8Code[i] = this.libFaust.HEAP8[$compiledCode + i];
+            const size = wasm.data.size();
+            const ui8Code = new Uint8Array(size);
+            this.log("copy " + size);
+            for (let i = 0; i < size; i++) {
+                ui8Code[i] = wasm.data.get(i);
             }
-            const $helpersCode = this.getWasmCHelpers($moduleCode);
-            const helpersCode = this.libFaust.UTF8ToString($helpersCode);
-            // Free strings
-            this.libFaust._free($code);
-            this.libFaust._free($name);
-            this.libFaust._free($errorMsg);
             // Free C allocated wasm module
-            this.freeWasmCModule($moduleCode);
-            // Get an updated integer view on the newly allocated buffer after possible emscripten memory grow
-            argvBuffer$ = new Int32Array(this.libFaust.HEAP32.buffer, $argv, argv.length);
-            // Free 'argv' C side array
-            for (let i = 0; i < argv.length; i++) {
-                this.libFaust._free(argvBuffer$[i]);
-            }
-            this.libFaust._free($argv);
-            return { ui8Code, code, helpersCode };
+            // this.log("freeWasmModule " + wasm.module);
+            // this.libFaust.freeWasmModule(wasm.module);
+            // this.log("freeWasmModule done");
+            return { ui8Code, code, helpersCode: wasm.helper };
+
+            // const time1 = performance.now();
+            // const $moduleCode = this.createWasmCDSPFactoryFromString($name, $code, argv.length, $argv, $errorMsg, internalMemory);
+            // const time2 = performance.now();
+            // this.log("Faust compilation duration : " + (time2 - time1));
+            // const errorMsg = this.libFaust.UTF8ToString($errorMsg);
+            // if (errorMsg) throw new Error(errorMsg);
+
+            // if ($moduleCode === 0) return null;
+            // const $compiledCode = this.getWasmCModule($moduleCode);
+            // const compiledCodeSize = this.getWasmCModuleSize($moduleCode);
+            // // Copy native 'binary' string in JavaScript Uint8Array
+            // const ui8Code = new Uint8Array(compiledCodeSize);
+            // for (let i = 0; i < compiledCodeSize; i++) {
+            //     // faster than 'getValue' which gets the type of access for each read...
+            //     ui8Code[i] = this.libFaust.HEAP8[$compiledCode + i];
+            // }
+            // const $helpersCode = this.getWasmCHelpers($moduleCode);
+            // const helpersCode = this.libFaust.UTF8ToString($helpersCode);
+            // // Free strings
+            // this.libFaust._free($code);
+            // this.libFaust._free($name);
+            // this.libFaust._free($errorMsg);
+            // // Free C allocated wasm module
+            // this.freeWasmCModule($moduleCode);
+            // // Get an updated integer view on the newly allocated buffer after possible emscripten memory grow
+            // argvBuffer$ = new Int32Array(this.libFaust.HEAP32.buffer, $argv, argv.length);
+            // // Free 'argv' C side array
+            // for (let i = 0; i < argv.length; i++) {
+            //     this.libFaust._free(argvBuffer$[i]);
+            // }
+            // this.libFaust._free($argv);
+            // return { ui8Code, code, helpersCode };
         } catch (e) {
             // libfaust is compiled without C++ exception activated, so a JS exception is throwed and catched here
-            const errorMsg = this.libFaust.UTF8ToString(this.getErrorAfterException());
-            this.cleanupAfterException();
+            const errorMsg = this.libFaust.getErrorAfterException();
+            this.libFaust.cleanupAfterException();
             // Report the Emscripten error
             throw errorMsg ? new Error(errorMsg) : e;
         }
@@ -285,7 +312,8 @@ export class Faust {
             // Existing factory, do not create it...
             return compiledDsp;
         }
-        this.log("libfaust.js version : " + this.getLibFaustVersion());
+        // this.log("libfaust.js version : " + this.getLibFaustVersion());
+        this.log("libfaust.js version : " + this.libFaust.version());
         // Create 'effect' expression
         const effectCode = `adapt(1,1) = _; adapt(2,2) = _,_; adapt(1,2) = _ <: _,_; adapt(2,1) = _,_ :> _;
 adaptor(F,G) = adapt(outputs(F),inputs(G));
@@ -309,59 +337,69 @@ process = adaptor(dsp_code.process, dsp_code.effect) : dsp_code.effect;`;
      * @memberof Faust
      */
     expandCode(code: string, args?: TFaustCompileArgs): string {
-        this.log("libfaust.js version : " + this.getLibFaustVersion());
+        this.log("libfaust.js version : " + this.libFaust.version());
         // Allocate strings on the HEAP
-        const codeSize = this.libFaust.lengthBytesUTF8(code) + 1;
-        const $code = this.libFaust._malloc(codeSize);
+        // const codeSize = this.libFaust.lengthBytesUTF8(code) + 1;
+        // const $code = this.libFaust._malloc(codeSize);
 
-        const name = "FaustDSP";
-        const nameSize = this.libFaust.lengthBytesUTF8(name) + 1;
-        const $name = this.libFaust._malloc(nameSize);
+        // const name = "FaustDSP";
+        // const nameSize = this.libFaust.lengthBytesUTF8(name) + 1;
+        // const $name = this.libFaust._malloc(nameSize);
 
-        const $shaKey = this.libFaust._malloc(64);
-        const $errorMsg = this.libFaust._malloc(4096);
+        // const $shaKey = this.libFaust._malloc(64);
+        // const $errorMsg = this.libFaust._malloc(4096);
 
-        this.libFaust.stringToUTF8(name, $name, nameSize);
-        this.libFaust.stringToUTF8(code, $code, codeSize);
+        // this.libFaust.stringToUTF8(name, $name, nameSize);
+        // this.libFaust.stringToUTF8(code, $code, codeSize);
 
-        const argvIn = args ? utils.toArgv(args) : [];
-        // Force "wasm" compilation
-        const argv = [...argvIn, "-lang", "wasm"];
+        // const argvIn = args ? utils.toArgv(args) : [];
+        // // Force "wasm" compilation
+        // const argv = [...argvIn, "-lang", "wasm"];
+
+        const argsStr = utils.args2String(args) + "-lang wasm";
 
         // Prepare 'argv' array for C side
-        const ptrSize = 4;
-        const $argv = this.libFaust._malloc(argv.length * ptrSize); // Get buffer from emscripten.
-        let argvBuffer$ = new Int32Array(this.libFaust.HEAP32.buffer, $argv, argv.length); // Get a integer view on the newly allocated buffer.
-        for (let i = 0; i < argv.length; i++) {
-            const size$arg = this.libFaust.lengthBytesUTF8(argv[i]) + 1;
-            const $arg = this.libFaust._malloc(size$arg);
-            this.libFaust.stringToUTF8(argv[i], $arg, size$arg);
-            argvBuffer$[i] = $arg;
-        }
+        // const ptrSize = 4;
+        // const $argv = this.libFaust._malloc(argv.length * ptrSize); // Get buffer from emscripten.
+        // let argvBuffer$ = new Int32Array(this.libFaust.HEAP32.buffer, $argv, argv.length); // Get a integer view on the newly allocated buffer.
+        // for (let i = 0; i < argv.length; i++) {
+        //     const size$arg = this.libFaust.lengthBytesUTF8(argv[i]) + 1;
+        //     const $arg = this.libFaust._malloc(size$arg);
+        //     this.libFaust.stringToUTF8(argv[i], $arg, size$arg);
+        //     argvBuffer$[i] = $arg;
+        // }
         try {
-            const $expandedCode = this.expandCDSPFromString($name, $code, argv.length, $argv, $shaKey, $errorMsg);
-            const expandedCode = this.libFaust.UTF8ToString($expandedCode);
-            const errorMsg = this.libFaust.UTF8ToString($errorMsg);
+            let expand = this.libFaust.expandDSP("FaustDSP", code, argsStr);
+            const expandedCode = expand.dsp;
+            const errorMsg = expand.error;
             if (errorMsg) this.error(errorMsg);
+
+            // const $expandedCode = this.expandCDSPFromString($name, $code, argv.length, $argv, $shaKey, $errorMsg);
+            // const expandedCode = this.libFaust.UTF8ToString($expandedCode);
+            // const errorMsg = this.libFaust.UTF8ToString($errorMsg);
+            // if (errorMsg) this.error(errorMsg);
             // Free strings
-            this.libFaust._free($code);
-            this.libFaust._free($name);
-            this.libFaust._free($shaKey);
-            this.libFaust._free($errorMsg);
+            // this.libFaust._free($code);
+            // this.libFaust._free($name);
+            // this.libFaust._free($shaKey);
+            // this.libFaust._free($errorMsg);
             // Free C allocated expanded string
-            this.freeCMemory($expandedCode);
+            // this.freeCMemory($expandedCode);
             // Get an updated integer view on the newly allocated buffer after possible emscripten memory grow
-            argvBuffer$ = new Int32Array(this.libFaust.HEAP32.buffer, $argv, argv.length);
-            // Free 'argv' C side array
-            for (let i = 0; i < argv.length; i++) {
-                this.libFaust._free(argvBuffer$[i]);
-            }
-            this.libFaust._free($argv);
+            // argvBuffer$ = new Int32Array(this.libFaust.HEAP32.buffer, $argv, argv.length);
+            // // Free 'argv' C side array
+            // for (let i = 0; i < argv.length; i++) {
+            //     this.libFaust._free(argvBuffer$[i]);
+            // }
+            // this.libFaust._free($argv);
             return expandedCode;
         } catch (e) {
             // libfaust is compiled without C++ exception activated, so a JS exception is throwed and catched here
-            const errorMsg = this.libFaust.UTF8ToString(this.getErrorAfterException());
-            this.cleanupAfterException();
+            const errorMsg = this.libFaust.getErrorAfterException();
+            this.libFaust.cleanupAfterException();
+
+            // const errorMsg = this.libFaust.UTF8ToString(this.getErrorAfterException());
+            // this.cleanupAfterException();
             // Report the Emscripten error
             throw errorMsg ? new Error(errorMsg) : e;
         }
@@ -495,7 +533,8 @@ const faustData = ${JSON.stringify({
         // The JS side is cleared
         delete this.dspTable[compiledDsp.shaKey];
         // The native C++ is cleared each time (freeWasmCModule has been already called in faust.compile)
-        this.deleteAllWasmCDSPFactories();
+        this.libFaust.deleteAllDSPFactories();
+        // this.deleteAllWasmCDSPFactories();
     }
     /**
      * Stringify current storaged DSP Table.
@@ -558,45 +597,50 @@ const faustData = ${JSON.stringify({
      * @memberof Faust
      */
     getDiagram(code: string, args?: TFaustCompileArgs): string {
-        const codeSize = this.libFaust.lengthBytesUTF8(code) + 1;
-        const $code = this.libFaust._malloc(codeSize);
-        const name = "FaustDSP";
-        const nameSize = this.libFaust.lengthBytesUTF8(name) + 1;
-        const $name = this.libFaust._malloc(nameSize);
-        const $errorMsg = this.libFaust._malloc(4096);
+        // const codeSize = this.libFaust.lengthBytesUTF8(code) + 1;
+        // const $code = this.libFaust._malloc(codeSize);
+        // const name = "FaustDSP";
+        // const nameSize = this.libFaust.lengthBytesUTF8(name) + 1;
+        // const $name = this.libFaust._malloc(nameSize);
+        // const $errorMsg = this.libFaust._malloc(4096);
 
-        this.libFaust.stringToUTF8(name, $name, nameSize);
-        this.libFaust.stringToUTF8(code, $code, codeSize);
-        const argvIn = args ? utils.toArgv(args) : [];
-        const argv = [...argvIn, "-lang", "wast", "-o", "/dev/null", "-svg"];
+        // this.libFaust.stringToUTF8(name, $name, nameSize);
+        // this.libFaust.stringToUTF8(code, $code, codeSize);
+        // const argvIn = args ? utils.toArgv(args) : [];
+        // const argv = [...argvIn, "-lang", "wast", "-o", "/dev/null", "-svg"];
 
-        // Prepare 'argv' array for C side
-        const ptrSize = 4;
-        const $argv = this.libFaust._malloc(argv.length * ptrSize); // Get buffer from emscripten.
-        let argvBuffer$ = new Int32Array(this.libFaust.HEAP32.buffer, $argv, argv.length); // Get a integer view on the newly allocated buffer.
-        for (let i = 0; i < argv.length; i++) {
-            const size$arg = this.libFaust.lengthBytesUTF8(argv[i]) + 1;
-            const $arg = this.libFaust._malloc(size$arg);
-            this.libFaust.stringToUTF8(argv[i], $arg, size$arg);
-            argvBuffer$[i] = $arg;
-        }
+        // // Prepare 'argv' array for C side
+        // const ptrSize = 4;
+        // const $argv = this.libFaust._malloc(argv.length * ptrSize); // Get buffer from emscripten.
+        // let argvBuffer$ = new Int32Array(this.libFaust.HEAP32.buffer, $argv, argv.length); // Get a integer view on the newly allocated buffer.
+        // for (let i = 0; i < argv.length; i++) {
+        //     const size$arg = this.libFaust.lengthBytesUTF8(argv[i]) + 1;
+        //     const $arg = this.libFaust._malloc(size$arg);
+        //     this.libFaust.stringToUTF8(argv[i], $arg, size$arg);
+        //     argvBuffer$[i] = $arg;
+        // }
+
+        const argsStr = utils.args2String(args) + "-lang wasm -o /dev/null -svg";
         try {
-            this.generateCAuxFilesFromString($name, $code, argv.length, $argv, $errorMsg);
-            // Free strings
-            this.libFaust._free($code);
-            this.libFaust._free($name);
-            this.libFaust._free($errorMsg);
-            // Get an updated integer view on the newly allocated buffer after possible emscripten memory grow
-            argvBuffer$ = new Int32Array(this.libFaust.HEAP32.buffer, $argv, argv.length);
-            // Free 'argv' C side array
-            for (let i = 0; i < argv.length; i++) {
-                this.libFaust._free(argvBuffer$[i]);
-            }
-            this.libFaust._free($argv);
+            let aux = this.libFaust.generateAuxFiles("FaustDSP", code, argsStr);
+
+            // this.generateCAuxFilesFromString($name, $code, argv.length, $argv, $errorMsg);
+            // // Free strings
+            // this.libFaust._free($code);
+            // this.libFaust._free($name);
+            // this.libFaust._free($errorMsg);
+            // // Get an updated integer view on the newly allocated buffer after possible emscripten memory grow
+            // argvBuffer$ = new Int32Array(this.libFaust.HEAP32.buffer, $argv, argv.length);
+            // // Free 'argv' C side array
+            // for (let i = 0; i < argv.length; i++) {
+            //     this.libFaust._free(argvBuffer$[i]);
+            // }
+            // this.libFaust._free($argv);
         } catch (e) {
             // libfaust is compiled without C++ exception activated, so a JS exception is throwed and catched here
-            const errorMsg = this.libFaust.UTF8ToString(this.getErrorAfterException());
-            this.cleanupAfterException();
+            // const errorMsg = this.libFaust.UTF8ToString(this.getErrorAfterException());
+            const errorMsg = this.libFaust.getErrorAfterException();
+            this.libFaust.cleanupAfterException();
             // Report the Emscripten error
             throw errorMsg ? new Error(errorMsg) : e;
         }

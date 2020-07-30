@@ -124,6 +124,23 @@ export const createWasmMemory = (voicesIn: number, dspMeta: TDspMeta, effectMeta
     memorySize = Math.max(2, memorySize); // As least 2
     return new WebAssembly.Memory({ initial: memorySize, maximum: memorySize });
 };
+
+export const args2String = (args: TFaustCompileArgs) => {
+    let argStr = "";
+    for (const key in args) {
+        const arg = args[key];
+        if (Array.isArray(arg)) arg.forEach((s: string) => argStr += key + " " + s + " ");
+        else argStr += key + " " + arg + " ";
+    }
+    return argStr;
+};
+
+export const argsTbl2String = (args: string[]) => {
+    let argStr = "";
+    args.forEach( (item) => { argStr += item + " "} );
+    return argStr;
+};
+
 export const toArgv = (args: TFaustCompileArgs) => {
     const argv: string[] = [];
     for (const key in args) {
