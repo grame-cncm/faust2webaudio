@@ -39,11 +39,11 @@ const config = {
 module.exports = (env, argv) => {
   if (argv.mode === 'development') {
     config.devtool = 'source-map';
-    config.output.filename = 'index.js';
+    config.output.filename = 'faust2webaudio.js';
   }
   if (argv.mode === 'production') {
     config.devtool = 'source-map';
-    config.output.filename = 'index.min.js';
+    config.output.filename = 'faust2webaudio.min.js';
   }
   return config;
 };
