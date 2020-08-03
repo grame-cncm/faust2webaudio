@@ -10,7 +10,7 @@
     "jsx": "react",
     "outDir": "dist",
     "declaration": true,
-    "declarationDir": "src",
+    "declarationDir": "decl",
     "noUnusedLocals": false,
     "noImplicitReturns": true,
     "noImplicitThis": true,
